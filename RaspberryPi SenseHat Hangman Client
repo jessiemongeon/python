@@ -4,6 +4,7 @@ state = {
             "user_pick" : None,
             "picks" : ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"),
             "choice_index" : 0
+            "game_status" : ("y" , "n")
             }
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -367,6 +368,10 @@ def get_user_pick(state):
     picks = state["picks"]
     return picks[state["choice_index"] % len(picks)]
 
+def get_game_status(state):
+    pick = state["game_status"]
+    return pick[state["choice_index"] % len(picks)]
+
 def generate_word_string(word_to_guess, letters_guessed):
     output = []
     for letter in word_to_guess:
@@ -431,51 +436,98 @@ def display(state):
     elif user_pick == "z":
         sense.set_pixels(letter_z)
 
-server_address = ('192.168.10.185', 8012)
-sock.connect(server_address)
-sense.clear()
-for image in [hangman1, hangman2, hangman3]:
-    sense.set_pixels(image)
+def game_display(state):
+    user_pick = get_game_status(state)
+    if user_pick == "y":
+        sense.set_pixels(letter_y)
+    elif user_pick == "n":
+        sense.set_pixels(letter_n)
+
+def main():
+    server_address = ('192.168.10.185', 8013)
+    sock.connect(server_address)
+    sense.clear()
+    for image in [hangman1, hangman2, hangman3]:
+        sense.set_pixels(image)
+        time.sleep(1)
+    sense.set_pixels(art1)
     time.sleep(1)
-sense.set_pixels(art1)
-time.sleep(1)
-sense.set_rotation(180)
-sense.set_pixels(art2)
-time.sleep(1)
-sense.set_rotation(0)
-sense.set_pixels(letter_a)
+    sense.set_rotation(180)
+    sense.set_pixels(art2)
+    time.sleep(1)
+    sense.set_rotation(0)
+    sense.set_pixels(letter_a)
 
-word_to_guess = s.recv(1024).decode()
+    word_to_guess = s.recv(1024).decode()
 
-letters_to_guess = set(word_to_guess)
-correct_letters_guessed = set()
-incorrect_letters_guessed = set()
-num_guessed = 0
-while (len(letters_to_guess) > 0) and num_guessed < 6:
-    events = sense.stick.get_events()
-    if events:
-        for event in events:
-            if event.action != 'pressed':
-                continue
-            if event.direction == 'left':
-                state["choice_index"] -= 1
-                display(state)
-            elif event.direction == 'right':
-                state["choice_index"] += 1
-                display(state)
-            elif event.direction == 'middle':
-                state["user_pick"] = get_user_pick(state)
-                sock.sendall(state["user_pick"].encode())
-                if sock.recv(1024).decode() == "Yes, there's one of those":
-                    letters_to_guess.remove(state["user_pick"])
-                    correct_letters_guessed.add(state["user_pick"])
-                else:
-                    incorrect_letters_guessed.add(state["user_pick"])
-                    num_guessed += 1
+    letters_to_guess = set(word_to_guess)
+    correct_letters_guessed = set()
+    incorrect_letters_guessed = set()
+    num_guessed = 0
+    while (len(letters_to_guess) > 0) and num_guessed < 6:
+        events = sense.stick.get_events()
+        if events:
+            for event in events:
+                if event.action != 'pressed':
+                    continue
+                if event.direction == 'left':
+                    state["choice_index"] -= 1
+                    display(state)
+                elif event.direction == 'right':
+                    state["choice_index"] += 1
+                    display(state)
+                elif event.direction == 'middle':
+                    state["user_pick"] = get_user_pick(state)
+                    sock.sendall(state["user_pick"].encode())
+                    if sock.recv(1024).decode() == "yes":
+                        letters_to_guess.remove(state["user_pick"])
+                        correct_letters_guessed.add(state["user_pick"])
+                    else:
+                        incorrect_letters_guessed.add(state["user_pick"])
+                        num_guessed += 1
                 
-if num_guessed < 6:
-    sense.show_message("You win!")
-else:
-    sense.show_message("You lose!")
+    if num_guessed < 6:
+        sense.show_message("You win!")
+        sense.show_message("Play again?")
+        events = sense.stick.get_events()
+        if events:
+            for event in events:
+                if event.action != 'pressed':
+                    continue
+                if event.direction == 'left':
+                    state["game_status"] -= 1
+                    display(state)
+                elif event.direction == 'right':
+                    state["game_status"] += 1
+                    display(state)
+                elif event.direction == 'middle':
+                    state["game_status"] = get_game_status(state)
+                    if state["game_status"] == 'y':
+                        main()
+                    else:
+                        sense.show_message("Goodbye!")
+                        break
+    else:
+        sense.show_message("You lose!")
+        sense.show_message("Play again?")
+        events = sense.stick.get_events()
+        if events:
+            for event in events:
+                if event.action != 'pressed':
+                    continue
+                if event.direction == 'left':
+                    state["game_status"] -= 1
+                    display(state)
+                elif event.direction == 'right':
+                    state["game_status"] += 1
+                    display(state)
+                elif event.direction == 'middle':
+                    state["game_status"] = get_game_status(state)
+                    if state["game_status"] == 'y':
+                        main()
+                    else:
+                        sense.show_message("Goodbye!")
+                        break
                 
-    
+main()
+
