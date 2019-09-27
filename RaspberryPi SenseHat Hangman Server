@@ -106,16 +106,6 @@ O, E, O, O, O, O, E, O,
 E, O, O, O, O, O, O, E
 ]
 
-man1 = [
-O, O, X, X, X, O, O, O,
-O, X, O, O, O, X, O, O,
-O, X, O, O, O, O, O, O,
-O, X, O, O, O, O, O, O,
-O, X, O, O, O, O, O, O,
-X, X, X, O, O, O, O, O,
-X, O, X, O, O, O, O, O,
-X, O, X, O, O, O, O, O,
-]
 
 man2 = [
 O, O, X, X, X, O, O, O,
@@ -184,33 +174,14 @@ X, O, X, O, E, O, E, O,
 X, O, X, O, O, O, O, O,
 ]
 
-man_win = [
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O,
-O, O, X, O, X, O, O, O,
-O, O, O, O, O, O, O, O,
-O, X, O, O, O, X, O, O,
-O, O, X, O, X, O, O, O,
-O, O, O, X, O, O, O, O,
-O, O, O, O, O, O, O, O
-]
-
-man_lose = [
-O, O, O, O, O, O, O, O, 
-O, O, O, O, O, O, O, O,
-O, O, X, O, X, O, O, O,
-O, O, O, O, O, O, O, O,
-O, O, O, X, O, O, O, O,
-O, O, X, O, X, O, O, O,
-O, X, O, O, O, X, O, O,
-O, O, O, O, O, O, O, O
-]
-
-
-
 host = ''        
-port = 8003
+port = 8012
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((host, port))
+s.listen(1)
+conn, addr = s.accept()
+print('Connected by', addr)
+conn.send(word_to_guess.encode())
 sense.clear()
 for image in [hangman1, hangman2, hangman3]:
     sense.set_pixels(image)
@@ -221,19 +192,16 @@ sense.set_rotation(180)
 sense.set_pixels(art2)
 time.sleep(1)
 sense.set_rotation(0)
+sense.show_message("Welcome to Hangman! Pick a letter")
 sense.set_pixels(hangman1)
-s.bind((host, port))
-s.listen(1)
-conn, addr = s.accept()
-print('Connected by', addr)
-conn.send(word_to_guess.encode())
+
 
 
 letters_to_guess = set(word_to_guess)
 correct_letters_guessed = set()
 incorrect_letters_guessed = set()
 num_guessed = 0
-while (len(letters_to_guess) > 0) and num_guessed < 7:
+while (len(letters_to_guess) > 0) and num_guessed < 6:
     s.listen(1)
     user_pick = (conn.recv(1024).decode())
 
@@ -244,18 +212,16 @@ while (len(letters_to_guess) > 0) and num_guessed < 7:
         sense.set_pixels(green)
         time.sleep(1)
         if num_guessed == 1:
-            sense.set_pixels(man1)
-        elif num_guessed == 2:
             sense.set_pixels(man2)
-        elif num_guessed == 3:
+        elif num_guessed == 2:
             sense.set_pixels(man3)
-        elif num_guessed == 4:
+        elif num_guessed == 3:
             sense.set_pixels(man4)
-        elif num_guessed == 5:
+        elif num_guessed == 4:
             sense.set_pixels(man5)
-        elif num_guessed == 6:
+        elif num_guessed == 5:
             sense.set_pixels(man6)
-        elif num_guessed == 7:
+        elif num_guessed == 6:
             sense.set_pixels(man7)
         
     else:
@@ -265,32 +231,30 @@ while (len(letters_to_guess) > 0) and num_guessed < 7:
         sense.set_pixels(red)
         time.sleep(1)
         if num_guessed == 1:
-            sense.set_pixels(man1)
-        elif num_guessed == 2:
             sense.set_pixels(man2)
-        elif num_guessed == 3:
+        elif num_guessed == 2:
             sense.set_pixels(man3)
-        elif num_guessed == 4:
+        elif num_guessed == 3:
             sense.set_pixels(man4)
-        elif num_guessed == 5:
+        elif num_guessed == 4:
             sense.set_pixels(man5)
-        elif num_guessed == 6:
+        elif num_guessed == 5:
             sense.set_pixels(man6)
-        elif num_guessed == 7:
+        elif num_guessed == 6:
             sense.set_pixels(man7)
             
             
     word_string = generate_word_string(word_to_guess, correct_letters_guessed)
     print(incorrect_letters_guessed)
     print(word_string)
-    print("You have {} guesses left.".format(7 - num_guessed))
+    print("You have {} guesses left.".format(6 - num_guessed))
     print("You have guessed {} so far".format(list(incorrect_letters_guessed)))
         
-if num_guessed < 7:
+if num_guessed < 6:
     print("You win!")
-    sense.set_pixels(man_win)
+    sense.show_message("You win!")
 else:
     print("You lose")
-    sense.set_pixels(man_lose)
+    sense.show_message("You lose!")
    
 
