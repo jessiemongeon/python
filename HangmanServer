@@ -288,8 +288,9 @@ while (len(letters_to_guess) > 0) and num_guessed < 7:
         
 if num_guessed < 7:
     print("You win!")
-    sense.set_pixels(man_lose)
+    sense.set_pixels(man_win)
 else:
     print("You lose")
+    sense.set_pixels(man_lose)
    
 
