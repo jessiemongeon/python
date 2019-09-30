@@ -1,0 +1,496 @@
+import sense_hat, random, time, socket
+# for the LED letters you can switch between
+sense = sense_hat.SenseHat()
+state = {
+    "user_pick": None,
+    "picks": (
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w",
+    "x", "y", "z"),
+    "choice_index": 0
+}
+# Connection settings
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = sock
+
+# Define colors for LED lights
+X = [0, 0, 255]
+O = [0, 0, 0]
+W = [0, 255, 0]
+E = [255, 0, 0]
+A = [123, 255, 90]
+B = [255, 100, 50]
+C = [0, 255, 120]
+D = [0, 90, 255]
+
+# Game Images
+letter_a = [
+    O, O, O, O, O, O, O, O,
+    O, O, O, X, X, O, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, X, X, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O
+]
+
+letter_b = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, W, W, O, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, W, W, O, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, W, W, O, O, O
+]
+
+letter_c = [
+    O, O, O, O, O, O, O, O,
+    O, O, O, E, E, E, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, O, E, E, E, O, O,
+]
+
+letter_d = [
+    O, O, O, O, O, O, O, O,
+    O, O, X, X, X, O, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, X, X, O, O, O,
+]
+
+letter_e = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, W, W, O, O, O,
+    O, O, W, O, O, O, O, O,
+    O, O, W, O, O, O, O, O,
+    O, O, W, W, W, O, O, O,
+    O, O, W, O, O, O, O, O,
+    O, O, W, O, O, O, O, O,
+    O, O, W, W, W, O, O, O,
+]
+
+letter_f = [
+    O, O, O, O, O, O, O, O,
+    O, O, E, E, E, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, E, E, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+]
+
+letter_g = [
+    O, O, O, O, O, O, O, O,
+    O, O, X, X, X, O, O, O,
+    O, X, O, O, O, O, O, O,
+    O, X, O, O, O, O, O, O,
+    O, X, O, X, X, X, O, O,
+    O, X, O, O, X, O, O, O,
+    O, X, O, O, X, O, O, O,
+    O, O, X, X, O, O, O, O,
+]
+
+letter_h = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, W, W, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+]
+
+letter_i = [
+    O, O, O, O, O, O, O, O,
+    O, O, E, E, E, O, O, O,
+    O, O, O, E, O, O, O, O,
+    O, O, O, E, O, O, O, O,
+    O, O, O, E, O, O, O, O,
+    O, O, O, E, O, O, O, O,
+    O, O, O, E, O, O, O, O,
+    O, O, E, E, E, O, O, O,
+]
+
+letter_j = [
+    O, O, O, O, O, O, O, O,
+    O, O, O, X, X, X, O, O,
+    O, O, O, O, X, O, O, O,
+    O, O, O, O, X, O, O, O,
+    O, O, O, O, X, O, O, O,
+    O, O, X, O, X, O, O, O,
+    O, O, X, X, X, O, O, O,
+    O, O, O, O, O, O, O, O,
+]
+
+letter_k = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, W, O, O, O,
+    O, O, W, W, O, O, O, O,
+    O, O, W, O, W, O, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+    O, O, W, O, O, W, O, O,
+]
+
+letter_l = [
+    O, O, O, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, O, O, O, O, O,
+    O, O, E, E, E, E, O, O,
+]
+
+letter_m = [
+    O, O, O, O, O, O, O, O,
+    O, X, O, O, O, O, X, O,
+    O, X, X, O, O, X, X, O,
+    O, X, O, X, X, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+]
+
+letter_n = [
+    O, O, O, O, O, O, O, O,
+    O, W, O, O, O, O, W, O,
+    O, W, W, O, O, O, W, O,
+    O, W, O, W, O, O, W, O,
+    O, W, O, O, W, O, W, O,
+    O, W, O, O, O, W, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+]
+
+letter_o = [
+    O, O, O, O, O, O, O, O,
+    O, O, E, E, E, E, O, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, O, E, E, E, E, O, O,
+]
+
+letter_p = [
+    O, O, O, O, O, O, O, O,
+    O, O, X, X, X, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, X, X, X, O, O,
+    O, O, X, O, O, O, O, O,
+    O, O, X, O, O, O, O, O,
+    O, O, X, O, O, O, O, O,
+]
+
+letter_q = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, W, W, W, O, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, W, W, O,
+    O, W, O, O, O, O, W, W,
+    O, O, W, W, W, W, O, O,
+]
+
+letter_r = [
+    O, O, O, O, O, O, O, O,
+    O, O, E, E, E, O, O, O,
+    O, O, E, O, O, E, O, O,
+    O, O, E, O, O, E, O, O,
+    O, O, E, E, E, O, O, O,
+    O, O, E, O, E, O, O, O,
+    O, O, E, O, O, E, O, O,
+    O, O, E, O, O, E, O, O,
+]
+
+letter_s = [
+    O, O, O, O, O, O, O, O,
+    O, O, O, X, X, X, O, O,
+    O, O, X, O, O, O, O, O,
+    O, O, X, O, O, O, O, O,
+    O, O, O, X, X, O, O, O,
+    O, O, O, O, O, X, O, O,
+    O, O, O, O, O, X, O, O,
+    O, O, X, X, X, O, O, O,
+]
+
+letter_t = [
+    O, O, O, O, O, O, O, O,
+    O, W, W, W, W, W, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, O, W, O, O, O, O,
+]
+
+letter_u = [
+    O, O, O, O, O, O, O, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, O, E, E, E, E, O, O,
+]
+
+letter_v = [
+    O, O, O, O, O, O, O, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, X, O, O, O, O, X, O,
+    O, O, X, O, O, X, O, O,
+    O, O, O, X, X, O, O, O,
+    O, O, O, O, O, O, O, O,
+]
+
+letter_w = [
+    O, O, O, O, O, O, O, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, O, O, O, W, O,
+    O, W, O, W, W, O, W, O,
+    O, W, W, O, O, W, W, O,
+    O, W, O, O, O, O, W, O,
+]
+
+letter_x = [
+    O, O, O, O, O, O, O, O,
+    O, E, O, O, O, O, E, O,
+    O, E, O, O, O, O, E, O,
+    O, O, E, O, O, E, O, O,
+    O, O, O, E, E, O, O, O,
+    O, O, O, E, E, O, O, O,
+    O, O, E, O, O, E, O, O,
+    O, E, O, O, O, O, E, O,
+]
+
+letter_y = [
+    O, O, O, O, O, O, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, O, O, X, O, O,
+    O, O, X, X, X, X, O, O,
+    O, O, O, O, O, X, O, O,
+    O, O, O, O, X, O, O, O,
+    O, O, O, X, O, O, O, O,
+    O, O, X, O, O, O, O, O,
+]
+
+letter_z = [
+    O, O, O, O, O, O, O, O,
+    O, O, W, W, W, W, O, O,
+    O, O, O, O, O, W, O, O,
+    O, O, O, O, W, O, O, O,
+    O, O, O, W, O, O, O, O,
+    O, O, W, O, O, O, O, O,
+    O, O, W, W, W, W, O, O,
+    O, O, O, O, O, O, O, O,
+]
+
+hangman1 = [
+    O, O, X, X, X, O, O, O,
+    O, X, O, O, O, X, O, O,
+    O, X, O, O, O, O, O, O,
+    O, X, O, O, O, O, O, O,
+    O, X, O, O, O, O, O, O,
+    X, X, X, O, O, O, O, O,
+    X, O, X, O, O, O, O, O,
+    X, O, X, O, O, O, O, O,
+]
+
+hangman2 = [
+    O, O, X, X, X, O, O, O,
+    O, X, O, O, O, X, O, O,
+    O, X, O, O, O, E, O, O,
+    O, X, O, O, E, E, E, O,
+    O, X, O, O, O, O, O, O,
+    X, X, X, O, O, O, O, O,
+    X, O, X, O, O, O, O, O,
+    X, O, X, O, O, O, O, O,
+]
+
+hangman3 = [
+    O, O, X, X, X, O, O, O,
+    O, X, O, O, O, X, O, O,
+    O, X, O, O, O, E, O, O,
+    O, X, O, O, E, E, E, O,
+    O, X, O, O, O, E, O, O,
+    X, X, X, O, E, O, E, O,
+    X, O, X, O, O, O, O, O,
+    X, O, X, O, O, O, O, O,
+]
+
+art1 = [
+    A, B, C, D, E, A, B, C,
+    D, E, A, B, C, D, E, A,
+    B, C, D, E, A, B, C, D,
+    E, A, B, C, D, E, A, B,
+    C, D, E, A, B, C, D, E,
+    A, B, C, D, E, A, B, C,
+    D, E, A, B, C, D, E, A,
+    B, C, D, E, A, B, C, D
+]
+
+art2 = [
+    C, D, E, A, B, C, D, E,
+    A, B, C, D, E, A, B, C,
+    D, E, A, B, C, D, E, A,
+    B, C, D, E, A, B, C, D,
+    E, A, B, C, D, E, A, B,
+    C, D, E, A, B, C, D, E,
+    A, B, C, D, E, A, B, C,
+    D, E, A, B, C, D, E, A
+]
+
+# Get user letter choice 
+def get_user_pick(state):
+    picks = state["picks"]
+    return picks[state["choice_index"] % len(picks)]
+
+# generate string of letters in the word
+def generate_word_string(word_to_guess, letters_guessed):
+    output = []
+    for letter in word_to_guess:
+        if letter in letters_guessed:
+            output.append(letter.upper())
+        else:
+            output.append("?")
+    return " ".join(output)
+
+# display letters on LED screen
+def display(state):
+    user_pick = get_user_pick(state)
+    if user_pick == "a":
+        sense.set_pixels(letter_a)
+    elif user_pick == "b":
+        sense.set_pixels(letter_b)
+    elif user_pick == "c":
+        sense.set_pixels(letter_c)
+    elif user_pick == "d":
+        sense.set_pixels(letter_d)
+    elif user_pick == "e":
+        sense.set_pixels(letter_e)
+    elif user_pick == "f":
+        sense.set_pixels(letter_f)
+    elif user_pick == "g":
+        sense.set_pixels(letter_g)
+    elif user_pick == "h":
+        sense.set_pixels(letter_h)
+    elif user_pick == "i":
+        sense.set_pixels(letter_i)
+    elif user_pick == "j":
+        sense.set_pixels(letter_j)
+    elif user_pick == "k":
+        sense.set_pixels(letter_k)
+    elif user_pick == "l":
+        sense.set_pixels(letter_l)
+    elif user_pick == "m":
+        sense.set_pixels(letter_m)
+    elif user_pick == "n":
+        sense.set_pixels(letter_n)
+    elif user_pick == "o":
+        sense.set_pixels(letter_o)
+    elif user_pick == "p":
+        sense.set_pixels(letter_p)
+    elif user_pick == "q":
+        sense.set_pixels(letter_q)
+    elif user_pick == "r":
+        sense.set_pixels(letter_r)
+    elif user_pick == "s":
+        sense.set_pixels(letter_s)
+    elif user_pick == "t":
+        sense.set_pixels(letter_t)
+    elif user_pick == "u":
+        sense.set_pixels(letter_u)
+    elif user_pick == "v":
+        sense.set_pixels(letter_v)
+    elif user_pick == "w":
+        sense.set_pixels(letter_w)
+    elif user_pick == "x":
+        sense.set_pixels(letter_x)
+    elif user_pick == "y":
+        sense.set_pixels(letter_y)
+    elif user_pick == "z":
+        sense.set_pixels(letter_z)
+
+# Connect to server pi
+server_address = ('192.168.10.201', 8018)
+sock.connect(server_address)
+
+# Beginning animation
+sense.clear()
+for image in [hangman1, hangman2, hangman3]:
+    sense.set_pixels(image)
+    time.sleep(1)
+sense.set_pixels(art1)
+time.sleep(1)
+sense.set_rotation(180)
+sense.set_pixels(art2)
+time.sleep(1)
+sense.set_rotation(0)
+sense.show_message("Welcome to Hangman!", scroll_speed=0.1, text_colour=[255, 0, 255])
+sense.show_message("Pick a letter", scroll_speed=0.1, text_colour=[0, 180, 255])
+sense.set_pixels(letter_a)
+
+# Get word to guess from server pi
+word_to_guess = s.recv(1024).decode()
+
+# Game variables 
+letters_to_guess = set(word_to_guess)
+correct_letters_guessed = set()
+incorrect_letters_guessed = set()
+num_guessed = 0
+
+# select letter on LED lights
+while (len(letters_to_guess) > 0) and num_guessed < 8:
+    events = sense.stick.get_events()
+    if events:
+        for event in events:
+            if event.action != 'pressed':
+                continue
+            if event.direction == 'left':
+                state["choice_index"] -= 1
+                display(state)
+            elif event.direction == 'right':
+                state["choice_index"] += 1
+                display(state)
+            elif event.direction == 'middle':
+                state["user_pick"] = get_user_pick(state)
+                sock.sendall(state["user_pick"].encode())
+                if sock.recv(1024).decode() == "Yes, there's one of those":
+                    letters_to_guess.remove(state["user_pick"])
+                    correct_letters_guessed.add(state["user_pick"])
+                else:
+                    incorrect_letters_guessed.add(state["user_pick"])
+                    num_guessed += 1
+    word_string = generate_word_string(word_to_guess, correct_letters_guessed)
+    
+if num_guessed < 8:
+    time.sleep(2)
+    sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
+    sense.show_message("You win!", scroll_speed=0.1, text_colour=[0, 0, 255])
+else:
+    sense.show_message("You lose!", scroll_speed=0.1, text_colour=[255, 0, 0])
+
