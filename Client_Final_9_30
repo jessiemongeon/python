@@ -436,61 +436,67 @@ def display(state):
         sense.set_pixels(letter_z)
 
 # Connect to server pi
-server_address = ('192.168.10.201', 8018)
+server_address = ('192.168.10.245', 8011)
 sock.connect(server_address)
 
-# Beginning animation
-sense.clear()
-for image in [hangman1, hangman2, hangman3]:
-    sense.set_pixels(image)
+def main():
+    # Beginning animation
+    sense.clear()
+    for image in [hangman1, hangman2, hangman3]:
+        sense.set_pixels(image)
+        time.sleep(1)
+    sense.set_pixels(art1)
     time.sleep(1)
-sense.set_pixels(art1)
-time.sleep(1)
-sense.set_rotation(180)
-sense.set_pixels(art2)
-time.sleep(1)
-sense.set_rotation(0)
-sense.show_message("Welcome to Hangman!", scroll_speed=0.1, text_colour=[255, 0, 255])
-sense.show_message("Pick a letter", scroll_speed=0.1, text_colour=[0, 180, 255])
-sense.set_pixels(letter_a)
+    sense.set_rotation(180)
+    sense.set_pixels(art2)
+    time.sleep(1)
+    sense.set_rotation(0)
+    sense.show_message("Welcome to Hangman!", scroll_speed=0.1, text_colour=[255, 0, 255])
+    sense.show_message("Pick a letter", scroll_speed=0.1, text_colour=[0, 180, 255])
+    sense.set_pixels(letter_a)
 
-# Get word to guess from server pi
-word_to_guess = s.recv(1024).decode()
+    # Get word to guess from server pi
+    word_to_guess = s.recv(1024).decode()
 
-# Game variables 
-letters_to_guess = set(word_to_guess)
-correct_letters_guessed = set()
-incorrect_letters_guessed = set()
-num_guessed = 0
+    # Game variables 
+    letters_to_guess = set(word_to_guess)
+    correct_letters_guessed = set()
+    incorrect_letters_guessed = set()
+    num_guessed = 0
 
-# select letter on LED lights
-while (len(letters_to_guess) > 0) and num_guessed < 8:
-    events = sense.stick.get_events()
-    if events:
-        for event in events:
-            if event.action != 'pressed':
-                continue
-            if event.direction == 'left':
-                state["choice_index"] -= 1
-                display(state)
-            elif event.direction == 'right':
-                state["choice_index"] += 1
-                display(state)
-            elif event.direction == 'middle':
-                state["user_pick"] = get_user_pick(state)
-                sock.sendall(state["user_pick"].encode())
-                if sock.recv(1024).decode() == "Yes, there's one of those":
-                    letters_to_guess.remove(state["user_pick"])
-                    correct_letters_guessed.add(state["user_pick"])
-                else:
-                    incorrect_letters_guessed.add(state["user_pick"])
-                    num_guessed += 1
-    word_string = generate_word_string(word_to_guess, correct_letters_guessed)
+    # select letter on LED lights
+    while (len(letters_to_guess) > 0) and num_guessed < 8:
+        events = sense.stick.get_events()
+        if events:
+            for event in events:
+                if event.action != 'pressed':
+                    continue
+                if event.direction == 'left':
+                    state["choice_index"] -= 1
+                    display(state)
+                elif event.direction == 'right':
+                    state["choice_index"] += 1
+                    display(state)
+                elif event.direction == 'middle':
+                    state["user_pick"] = get_user_pick(state)
+                    sock.sendall(state["user_pick"].encode())
+                    if sock.recv(1024).decode() == "Yes, there's one of those":
+                        letters_to_guess.remove(state["user_pick"])
+                        correct_letters_guessed.add(state["user_pick"])
+                    else:
+                        incorrect_letters_guessed.add(state["user_pick"])
+                        num_guessed += 1
+        word_string = generate_word_string(word_to_guess, correct_letters_guessed)
+  
+    if num_guessed < 8:
+        time.sleep(2)
+        sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
+        sense.show_message("You win!", scroll_speed=0.1, text_colour=[0, 0, 255])
     
-if num_guessed < 8:
-    time.sleep(2)
-    sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
-    sense.show_message("You win!", scroll_speed=0.1, text_colour=[0, 0, 255])
-else:
-    sense.show_message("You lose!", scroll_speed=0.1, text_colour=[255, 0, 0])
-
+    else:
+        sense.show_message("You lose!", scroll_speed=0.1, text_colour=[255, 0, 0])
+        
+main()
+sense.show_message("Play again?")
+sock.sendall(("play").encode())
+main()
