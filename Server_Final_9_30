@@ -2,7 +2,6 @@ import socket, sense_hat, random, time
 
 sense = sense_hat.SenseHat()
 
-sense = sense_hat.SenseHat()
 state = {
     "user_pick": None,
     "picks": (
@@ -203,7 +202,7 @@ man7 = [
 
 # Server settings
 host = ''
-port = 8018
+port = 8011
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #Bind port
 s.bind((host, port))
@@ -212,96 +211,104 @@ s.listen(1)
 conn, addr = s.accept()
 print('Connected by', addr)
 
-#Send word
-conn.send(word_to_guess.encode())
+def main(word_to_guess):
+    #Send word
+    conn.send(word_to_guess.encode())
 
-#Beginning animation
-sense.clear()
-for image in [hangman1, hangman2, hangman3]:
-    sense.set_pixels(image)
+    #Beginning animation
+    sense.clear()
+    for image in [hangman1, hangman2, hangman3]:
+        sense.set_pixels(image)
+        time.sleep(1)
+    sense.set_pixels(art1)
     time.sleep(1)
-sense.set_pixels(art1)
-time.sleep(1)
-sense.set_rotation(180)
-sense.set_pixels(art2)
-time.sleep(1)
-sense.set_rotation(0)
-sense.show_message("Welcome to Hangman!", scroll_speed=0.1, text_colour=[255, 0, 255])
-sense.show_message("Pick a letter", scroll_speed=0.1, text_colour=[0, 180, 255])
-sense.set_pixels(hangman1)
+    sense.set_rotation(180)
+    sense.set_pixels(art2)
+    time.sleep(1)
+    sense.set_rotation(0)
+    sense.show_message("Welcome to Hangman!", scroll_speed=0.1, text_colour=[255, 0, 255])
+    sense.show_message("Pick a letter", scroll_speed=0.1, text_colour=[0, 180, 255])
+    sense.set_pixels(hangman1)
 
-#Game variables
-letters_to_guess = set(word_to_guess)
-correct_letters_guessed = set()
-incorrect_letters_guessed = set()
-num_guessed = 0
+    #Game variables
+    letters_to_guess = set(word_to_guess)
+    correct_letters_guessed = set()
+    incorrect_letters_guessed = set()
+    num_guessed = 0
 
-#Get data from other pi
-while (len(letters_to_guess) > 0) and num_guessed < 8:
-    s.listen(1)
-    user_pick = (conn.recv(1024).decode())
+    #Get data from other pi
+    while (len(letters_to_guess) > 0) and num_guessed < 8:
+        s.listen(1)
+        user_pick = (conn.recv(1024).decode())
 
 
-    if user_pick in letters_to_guess:
-        letters_to_guess.remove(user_pick)
-        correct_letters_guessed.add(user_pick)
-        conn.send("Yes, there's one of those".encode())
-        word_string = generate_word_string(word_to_guess, correct_letters_guessed)
-        sense.set_pixels(green)
-        time.sleep(1)
-        sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
-        time.sleep(1)
-        if num_guessed == 0:
-            sense.set_pixels(hangman1)
-        elif num_guessed == 1:
-            sense.set_pixels(man0)
-        elif num_guessed == 2:
-            sense.set_pixels(man1)
-        elif num_guessed == 3:
-            sense.set_pixels(man2)
-        elif num_guessed == 4:
-            sense.set_pixels(man3)
-        elif num_guessed == 5:
-            sense.set_pixels(man4)
-        elif num_guessed == 6:
-            sense.set_pixels(man5)
-        elif num_guessed == 7:
-            sense.set_pixels(man6)
-        elif num_guessed == 8:
-            sense.set_pixels(man7)
+        if user_pick in letters_to_guess:
+            letters_to_guess.remove(user_pick)
+            correct_letters_guessed.add(user_pick)
+            conn.send("Yes, there's one of those".encode())
+            word_string = generate_word_string(word_to_guess, correct_letters_guessed)
+            sense.set_pixels(green)
+            time.sleep(1)
+            sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
+            time.sleep(1)
+            if num_guessed == 0:
+                sense.set_pixels(hangman1)
+            elif num_guessed == 1:
+                sense.set_pixels(man0)
+            elif num_guessed == 2:
+                sense.set_pixels(man1)
+            elif num_guessed == 3:
+                sense.set_pixels(man2)
+            elif num_guessed == 4:
+                sense.set_pixels(man3)
+            elif num_guessed == 5:
+                sense.set_pixels(man4)
+            elif num_guessed == 6:
+                sense.set_pixels(man5)
+            elif num_guessed == 7:
+                sense.set_pixels(man6)
+            elif num_guessed == 8:
+                sense.set_pixels(man7)
+        else:
+            incorrect_letters_guessed.add(user_pick)
+            num_guessed += 1
+            conn.send("No, none of those".encode())
+            word_string = generate_word_string(word_to_guess, correct_letters_guessed)
+            sense.set_pixels(red)
+            time.sleep(1)
+            sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
+            time.sleep(1)
+            if num_guessed == 1:
+                sense.set_pixels(man0)
+            elif num_guessed == 2:
+                sense.set_pixels(man1)
+            elif num_guessed == 3:
+                sense.set_pixels(man2)
+            elif num_guessed == 4:
+                sense.set_pixels(man3)
+            elif num_guessed == 5:
+                sense.set_pixels(man4)
+            elif num_guessed == 6:
+                sense.set_pixels(man5)
+            elif num_guessed == 7:
+                sense.set_pixels(man6)
+            elif num_guessed == 8:
+                sense.set_pixels(man7)
+
+        print(incorrect_letters_guessed)
+        print(word_string)
+        print("You have {} guesses left.".format(8 - num_guessed))
+        print("You have guessed {} so far".format(list(incorrect_letters_guessed)))
+
+    if num_guessed < 8:
+        sense.show_message("You win!", scroll_speed=0.1, text_colour=[0, 0, 255])
     else:
-        incorrect_letters_guessed.add(user_pick)
-        num_guessed += 1
-        conn.send("No, none of those".encode())
-        word_string = generate_word_string(word_to_guess, correct_letters_guessed)
-        sense.set_pixels(red)
-        time.sleep(1)
-        sense.show_message(word_string, scroll_speed=0.1, text_colour=[0, 180, 255])
-        time.sleep(1)
-        if num_guessed == 1:
-            sense.set_pixels(man0)
-        elif num_guessed == 2:
-            sense.set_pixels(man1)
-        elif num_guessed == 3:
-            sense.set_pixels(man2)
-        elif num_guessed == 4:
-            sense.set_pixels(man3)
-        elif num_guessed == 5:
-            sense.set_pixels(man4)
-        elif num_guessed == 6:
-            sense.set_pixels(man5)
-        elif num_guessed == 7:
-            sense.set_pixels(man6)
-        elif num_guessed == 8:
-            sense.set_pixels(man7)
+        sense.show_message("You lose!", scroll_speed=0.1, text_colour=[255, 0, 0])
+        
+        
+main(word_to_guess)
+sense.show_message("Play again?")
+if conn.recv(1024).decode() == "play":
+    main(word_to_guess)
 
-    print(incorrect_letters_guessed)
-    print(word_string)
-    print("You have {} guesses left.".format(8 - num_guessed))
-    print("You have guessed {} so far".format(list(incorrect_letters_guessed)))
-
-if num_guessed < 8:
-    sense.show_message("You win!", scroll_speed=0.1, text_colour=[0, 0, 255])
-else:
-    sense.show_message("You lose!", scroll_speed=0.1, text_colour=[255, 0, 0])
 
